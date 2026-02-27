@@ -1,6 +1,5 @@
 import { Resend } from "resend";
 
-const resend = new Resend(process.env.RESEND_API_KEY);
 const FROM = process.env.FROM_EMAIL ?? "notifications@friendsbook.app";
 const SITE_URL = process.env.NEXTAUTH_URL ?? "http://localhost:3000";
 
@@ -51,6 +50,7 @@ export async function sendNotificationEmail(
   type: NotifType
 ) {
   const { subject, text } = buildEmail(actorName, type);
+  const resend = new Resend(process.env.RESEND_API_KEY);
   await resend.emails.send({
     from: FROM,
     to: recipientEmail,
