@@ -32,6 +32,23 @@ export interface FriendshipStatus {
   friendshipId?: string;
 }
 
+export interface MessageData {
+  id: string;
+  conversationId: string;
+  senderId: string;
+  content: string;
+  read: boolean;
+  createdAt: string;
+  sender: UserSummary;
+}
+
+export interface ConversationData {
+  id: string;
+  updatedAt: string;
+  otherUser: UserSummary | null;
+  lastMessage: MessageData | null;
+}
+
 export interface ProfileData {
   id: string;
   firstName: string;

@@ -85,6 +85,15 @@ export default function Navbar({ user }: NavbarProps) {
             <SearchIcon className="w-5 h-5 text-fb-text" />
           </Link>
 
+          {/* Chat */}
+          <Link
+            href="/chat"
+            className="w-9 h-9 rounded-full bg-gray-100 hover:bg-gray-200 flex items-center justify-center"
+            aria-label="Messages"
+          >
+            <ChatIcon className="w-5 h-5 text-fb-text" />
+          </Link>
+
           {/* Notification bell */}
           <NotificationBell />
 
@@ -171,6 +180,13 @@ function ChevronDown({ className }: { className?: string }) {
   return (
     <svg className={className} fill="currentColor" viewBox="0 0 20 20">
       <path fillRule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clipRule="evenodd" />
+    </svg>
+  );
+}
+function ChatIcon({ className }: { className?: string }) {
+  return (
+    <svg className={className} fill="currentColor" viewBox="0 0 24 24">
+      <path d="M20 2H4c-1.1 0-2 .9-2 2v18l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zm-2 12H6v-2h12v2zm0-3H6V9h12v2zm0-3H6V6h12v2z" />
     </svg>
   );
 }

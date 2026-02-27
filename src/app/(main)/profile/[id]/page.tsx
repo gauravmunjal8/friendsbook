@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback } from "react";
 import { useSession } from "next-auth/react";
-import { useParams } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
 import Image from "next/image";
 import PostComposer from "@/components/posts/PostComposer";
 import PostCard from "@/components/posts/PostCard";
@@ -15,6 +15,7 @@ import type { ProfileData, PostWithDetails } from "@/types";
 export default function ProfilePage() {
   const { id } = useParams<{ id: string }>();
   const { data: session, update } = useSession();
+  const router = useRouter();
 
   const [profile, setProfile] = useState<ProfileData | null>(null);
   const [posts, setPosts] = useState<PostWithDetails[]>([]);
@@ -249,14 +250,31 @@ export default function ProfilePage() {
                   </div>
                 )}
                 {friendStatus === "ACCEPTED" && (
-                  <button
-                    onClick={cancelOrUnfriend}
-                    disabled={friendLoading}
-                    className="btn-secondary flex items-center gap-1.5 text-sm"
-                  >
-                    <CheckIcon className="w-4 h-4" />
-                    Friends
-                  </button>
+                  <>
+                    <button
+                      onClick={async () => {
+                        const res = await fetch("/api/conversations", {
+                          method: "POST",
+                          headers: { "Content-Type": "application/json" },
+                          body: JSON.stringify({ friendId: id }),
+                        });
+                        const data = await res.json();
+                        router.push(`/chat/${data.conversation.id}`);
+                      }}
+                      className="btn-primary flex items-center gap-1.5 text-sm"
+                    >
+                      <MessageIcon className="w-4 h-4" />
+                      Message
+                    </button>
+                    <button
+                      onClick={cancelOrUnfriend}
+                      disabled={friendLoading}
+                      className="btn-secondary flex items-center gap-1.5 text-sm"
+                    >
+                      <CheckIcon className="w-4 h-4" />
+                      Friends
+                    </button>
+                  </>
                 )}
               </>
             )}
@@ -399,6 +417,14 @@ function CheckIcon({ className }: { className?: string }) {
   return (
     <svg className={className} fill="currentColor" viewBox="0 0 24 24">
       <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z" />
+    </svg>
+  );
+}
+
+function MessageIcon({ className }: { className?: string }) {
+  return (
+    <svg className={className} fill="currentColor" viewBox="0 0 24 24">
+      <path d="M20 2H4c-1.1 0-2 .9-2 2v18l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2z" />
     </svg>
   );
 }
