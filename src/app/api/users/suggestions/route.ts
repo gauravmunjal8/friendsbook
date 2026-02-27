@@ -85,9 +85,9 @@ export async function GET(req: NextRequest) {
 
   // If not enough, pad with random users
   if (suggestions.length < 5) {
-    const existing = new Set([...excludedIds, ...suggestions.map((s) => s.id)]);
+    const existing = new Set(Array.from(excludedIds).concat(suggestions.map((s) => s.id)));
     const random = await prisma.user.findMany({
-      where: { id: { notIn: [...existing] } },
+      where: { id: { notIn: Array.from(existing) } },
       select: { id: true, firstName: true, lastName: true, profilePicture: true },
       take: 5 - suggestions.length,
       orderBy: { createdAt: "desc" },
