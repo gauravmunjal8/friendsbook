@@ -70,7 +70,7 @@ export async function GET(req: NextRequest) {
     });
 
     if (mutualMap.size > 0) {
-      const candidateIds = [...mutualMap.keys()].slice(0, 10);
+      const candidateIds = Array.from(mutualMap.keys()).slice(0, 10);
       const users = await prisma.user.findMany({
         where: { id: { in: candidateIds } },
         select: { id: true, firstName: true, lastName: true, profilePicture: true },
