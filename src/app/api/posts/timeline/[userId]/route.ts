@@ -16,6 +16,22 @@ export async function GET(
   const cursor = req.nextUrl.searchParams.get("cursor");
   const limit = 15;
 
+  // Only the profile owner and accepted friends may view timeline posts
+  if (userId !== session.user.id) {
+    const friendship = await prisma.friendship.findFirst({
+      where: {
+        OR: [
+          { requesterId: session.user.id, addresseeId: userId, status: "ACCEPTED" },
+          { requesterId: userId, addresseeId: session.user.id, status: "ACCEPTED" },
+        ],
+      },
+    });
+
+    if (!friendship) {
+      return NextResponse.json({ posts: [], nextCursor: null, restricted: true });
+    }
+  }
+
   const posts = await prisma.post.findMany({
     where: {
       timelineOwnerId: userId,

@@ -21,6 +21,7 @@ export default function ProfilePage() {
   const [cursor, setCursor] = useState<string | null>(null);
   const [hasMore, setHasMore] = useState(true);
   const [loadingPosts, setLoadingPosts] = useState(true);
+  const [postsRestricted, setPostsRestricted] = useState(false);
   const [editOpen, setEditOpen] = useState(false);
   const [friendLoading, setFriendLoading] = useState(false);
 
@@ -35,9 +36,15 @@ export default function ProfilePage() {
   const loadPosts = useCallback(
     async (cursorParam?: string) => {
       setLoadingPosts(true);
+      if (!cursorParam) setPostsRestricted(false);
       const url = `/api/posts/timeline/${id}${cursorParam ? `?cursor=${cursorParam}` : ""}`;
       const res = await fetch(url);
       const data = await res.json();
+      if (data.restricted) {
+        setPostsRestricted(true);
+        setLoadingPosts(false);
+        return;
+      }
       setPosts((prev) => (cursorParam ? [...prev, ...data.posts] : data.posts));
       setCursor(data.nextCursor);
       setHasMore(!!data.nextCursor);
@@ -105,6 +112,7 @@ export default function ProfilePage() {
           }
         : p
     );
+    loadPosts();
     setFriendLoading(false);
   }
 
@@ -314,6 +322,16 @@ export default function ProfilePage() {
                 </div>
               </div>
             </div>
+          ) : postsRestricted ? (
+            <div className="card p-8 text-center space-y-2">
+              <LockIcon className="w-8 h-8 text-fb-text-secondary mx-auto" />
+              <p className="font-semibold text-fb-text">
+                {fullName(profile.firstName, profile.lastName)}&apos;s posts are friends only
+              </p>
+              <p className="text-sm text-fb-text-secondary">
+                Add {profile.firstName} as a friend to see their posts and updates.
+              </p>
+            </div>
           ) : posts.length === 0 ? (
             <div className="card p-8 text-center">
               <p className="text-fb-text-secondary">No posts yet.</p>
@@ -381,6 +399,14 @@ function CheckIcon({ className }: { className?: string }) {
   return (
     <svg className={className} fill="currentColor" viewBox="0 0 24 24">
       <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z" />
+    </svg>
+  );
+}
+
+function LockIcon({ className }: { className?: string }) {
+  return (
+    <svg className={className} fill="currentColor" viewBox="0 0 24 24">
+      <path d="M18 8h-1V6c0-2.76-2.24-5-5-5S7 3.24 7 6v2H6c-1.1 0-2 .9-2 2v10c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V10c0-1.1-.9-2-2-2zm-6 9c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2zm3.1-9H8.9V6c0-1.71 1.39-3.1 3.1-3.1 1.71 0 3.1 1.39 3.1 3.1v2z" />
     </svg>
   );
 }
