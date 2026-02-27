@@ -1,0 +1,144 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id              String   @id @default(cuid())
+  email           String   @unique
+  passwordHash    String
+  firstName       String
+  lastName        String
+  birthday        DateTime?
+  hometown        String?
+  bio             String?
+  profilePicture  String?
+  coverPhoto      String?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  // Posts authored by this user
+  posts           Post[]   @relation("PostAuthor")
+
+  // Posts on this user's timeline (by others)
+  timelinePosts   Post[]   @relation("TimelineOwner")
+
+  // Comments made by this user
+  comments        Comment[]
+
+  // Likes made by this user
+  likes           Like[]
+
+  // Friendships where this user is the requester
+  sentRequests    Friendship[] @relation("Requester")
+
+  // Friendships where this user is the addressee
+  receivedRequests Friendship[] @relation("Addressee")
+
+  // Notifications received by this user
+  notifications   Notification[] @relation("NotificationRecipient")
+
+  // Notifications triggered by this user
+  triggeredNotifications Notification[] @relation("NotificationActor")
+
+  @@index([email])
+  @@index([firstName, lastName])
+}
+
+model Friendship {
+  id          String           @id @default(cuid())
+  requesterId String
+  addresseeId String
+  status      FriendshipStatus @default(PENDING)
+  createdAt   DateTime         @default(now())
+  updatedAt   DateTime         @updatedAt
+
+  requester   User @relation("Requester", fields: [requesterId], references: [id], onDelete: Cascade)
+  addressee   User @relation("Addressee", fields: [addresseeId], references: [id], onDelete: Cascade)
+
+  @@unique([requesterId, addresseeId])
+  @@index([requesterId])
+  @@index([addresseeId])
+}
+
+enum FriendshipStatus {
+  PENDING
+  ACCEPTED
+  REJECTED
+}
+
+model Post {
+  id              String   @id @default(cuid())
+  content         String?
+  images          String[] @default([])
+  authorId        String
+  timelineOwnerId String
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  author          User     @relation("PostAuthor", fields: [authorId], references: [id], onDelete: Cascade)
+  timelineOwner   User     @relation("TimelineOwner", fields: [timelineOwnerId], references: [id], onDelete: Cascade)
+
+  comments        Comment[]
+  likes           Like[]
+  notifications   Notification[]
+
+  @@index([authorId])
+  @@index([timelineOwnerId])
+  @@index([createdAt])
+}
+
+model Comment {
+  id        String   @id @default(cuid())
+  content   String
+  postId    String
+  authorId  String
+  createdAt DateTime @default(now())
+
+  post      Post @relation(fields: [postId], references: [id], onDelete: Cascade)
+  author    User @relation(fields: [authorId], references: [id], onDelete: Cascade)
+
+  @@index([postId])
+}
+
+model Like {
+  id        String   @id @default(cuid())
+  postId    String
+  userId    String
+  createdAt DateTime @default(now())
+
+  post      Post @relation(fields: [postId], references: [id], onDelete: Cascade)
+  user      User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([postId, userId])
+  @@index([postId])
+}
+
+model Notification {
+  id          String           @id @default(cuid())
+  recipientId String
+  actorId     String
+  type        NotificationType
+  postId      String?
+  read        Boolean          @default(false)
+  createdAt   DateTime         @default(now())
+
+  recipient   User @relation("NotificationRecipient", fields: [recipientId], references: [id], onDelete: Cascade)
+  actor       User @relation("NotificationActor", fields: [actorId], references: [id], onDelete: Cascade)
+  post        Post? @relation(fields: [postId], references: [id], onDelete: Cascade)
+
+  @@index([recipientId, read])
+  @@index([createdAt])
+}
+
+enum NotificationType {
+  FRIEND_REQUEST
+  FRIEND_ACCEPTED
+  POST_LIKED
+  POST_COMMENTED
+  TIMELINE_POST
+}

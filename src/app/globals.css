@@ -1,0 +1,30 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  * {
+    box-sizing: border-box;
+  }
+  body {
+    @apply bg-fb-gray text-fb-text font-sans;
+  }
+}
+
+@layer components {
+  .btn-primary {
+    @apply bg-fb-blue hover:bg-fb-blue-dark text-white font-semibold py-2 px-4 rounded-md transition-colors duration-150;
+  }
+  .btn-secondary {
+    @apply bg-gray-200 hover:bg-gray-300 text-fb-text font-semibold py-2 px-4 rounded-md transition-colors duration-150;
+  }
+  .btn-green {
+    @apply bg-fb-green hover:bg-fb-green-dark text-white font-semibold py-2 px-4 rounded-md transition-colors duration-150;
+  }
+  .card {
+    @apply bg-white rounded-lg shadow-sm border border-gray-200;
+  }
+  .input {
+    @apply w-full border border-fb-border rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-fb-blue focus:border-transparent;
+  }
+}
