@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
+import { sendNotificationEmail } from "@/lib/email";
 
 // PATCH /api/friends/[id] - accept or reject a friend request
 export async function PATCH(
@@ -42,6 +43,25 @@ export async function PATCH(
         type: "FRIEND_ACCEPTED",
       },
     });
+
+    const [requester, accepter] = await Promise.all([
+      prisma.user.findUnique({
+        where: { id: friendship.requesterId },
+        select: { email: true, firstName: true, lastName: true },
+      }),
+      prisma.user.findUnique({
+        where: { id: session.user.id },
+        select: { firstName: true, lastName: true },
+      }),
+    ]);
+    if (requester && accepter) {
+      sendNotificationEmail(
+        requester.email,
+        `${requester.firstName} ${requester.lastName}`,
+        `${accepter.firstName} ${accepter.lastName}`,
+        "FRIEND_ACCEPTED"
+      ).catch(() => {});
+    }
 
     return NextResponse.json({ friendship: updated });
   }

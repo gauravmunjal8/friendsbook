@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
+import { sendNotificationEmail } from "@/lib/email";
 
 // GET /api/posts/[id]/comments
 export async function GET(
@@ -70,6 +71,25 @@ export async function POST(
         postId: params.id,
       },
     });
+
+    const [author, actor] = await Promise.all([
+      prisma.user.findUnique({
+        where: { id: post.authorId },
+        select: { email: true, firstName: true, lastName: true },
+      }),
+      prisma.user.findUnique({
+        where: { id: session.user.id },
+        select: { firstName: true, lastName: true },
+      }),
+    ]);
+    if (author && actor) {
+      sendNotificationEmail(
+        author.email,
+        `${author.firstName} ${author.lastName}`,
+        `${actor.firstName} ${actor.lastName}`,
+        "POST_COMMENTED"
+      ).catch(() => {});
+    }
   }
 
   return NextResponse.json(comment, { status: 201 });

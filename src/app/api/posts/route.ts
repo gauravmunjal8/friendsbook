@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
+import { sendNotificationEmail } from "@/lib/email";
 
 // POST /api/posts - create a new post
 export async function POST(req: NextRequest) {
@@ -65,6 +66,25 @@ export async function POST(req: NextRequest) {
         postId: post.id,
       },
     });
+
+    const [owner, actor] = await Promise.all([
+      prisma.user.findUnique({
+        where: { id: ownerId },
+        select: { email: true, firstName: true, lastName: true },
+      }),
+      prisma.user.findUnique({
+        where: { id: session.user.id },
+        select: { firstName: true, lastName: true },
+      }),
+    ]);
+    if (owner && actor) {
+      sendNotificationEmail(
+        owner.email,
+        `${owner.firstName} ${owner.lastName}`,
+        `${actor.firstName} ${actor.lastName}`,
+        "TIMELINE_POST"
+      ).catch(() => {});
+    }
   }
 
   return NextResponse.json({ ...post, liked: false }, { status: 201 });
